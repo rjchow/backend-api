@@ -1,0 +1,81 @@
+service: dlt-functions
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${opt:stage, 'stg'}
+  region: ap-southeast-1
+  environment:
+    MUSKET_STORAGE_TABLE: musket-storage-${opt:stage, self:provider.stage}
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.MUSKET_STORAGE_TABLE}"
+
+resources:
+  Resources:
+    DocsDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: customerId
+            AttributeType: S
+          -
+            AttributeName: transactionTime
+            AttributeType: N
+        KeySchema:
+          -
+            AttributeName: customerId
+            KeyType: HASH
+          - AttributeName: transactionTime
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.MUSKET_STORAGE_TABLE}
+
+functions:
+  getQuota: 
+    handler: src/storage/get.handler
+    events:
+      - http:
+          path: /quota/{id}
+          method: get
+          request:
+            parameters:
+              paths:
+                id: true
+          cors: true
+  buyMask:
+    handler: src/storage/create.handler
+    events:
+      - http:
+          path: /transactions/{id}
+          method: post
+          request:
+            parameters:
+              paths:
+                id: true
+          cors: true
+
+custom:
+  # Enable auto migration in local dynamodb on start
+  dynamodb:
+    start:
+      port: 8000
+      inMemory: true
+      migrate: true
+    migration:
+      dir: offline/migrations
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-dynamodb-local
+  - serverless-offline
