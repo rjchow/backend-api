@@ -1,4 +1,4 @@
-service: dlt-functions
+service: musket-api
 
 provider:
   name: aws
@@ -74,6 +74,9 @@ custom:
       migrate: true
     migration:
       dir: offline/migrations
+    stages:
+      - ${self:provider.stage}
+
 
 plugins:
   - serverless-dotenv-plugin

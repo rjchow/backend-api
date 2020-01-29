@@ -1,7 +1,8 @@
 const uuid = require("uuid/v4");
 const {
   createTransaction,
-  getCustomerHistory
+  getCustomerHistory,
+  QUOTA_PER_PERIOD
 } = require("../../src/storage/documentService");
 
 describe("createTransaction", () => {
@@ -12,6 +13,30 @@ describe("createTransaction", () => {
     expect(receipt).toMatchObject([
       { quantity, transactionTime: expect.any(Number) }
     ]);
+  });
+  test("should fail if quantity is larger than whole quota", async () => {
+    expect.assertions(1);
+    const fakeId = uuid();
+    const quantity = 9999999;
+    try {
+      await createTransaction(fakeId, quantity);
+    } catch (e) {
+      expect(e.message).toEqual(
+        `Error: quantity requested will exceed customer quota of ${QUOTA_PER_PERIOD}`
+      );
+    }
+  });
+  test("should fail if quantity requested causes quota to exceed", async () => {
+    expect.assertions(1);
+    const fakeId = uuid();
+    await createTransaction(fakeId, 1);
+    try {
+      await createTransaction(fakeId, QUOTA_PER_PERIOD);
+    } catch (e) {
+      expect(e.message).toEqual(
+        `Error: quantity requested will exceed customer quota of ${QUOTA_PER_PERIOD}`
+      );
+    }
   });
 });
 
@@ -31,7 +56,7 @@ describe("getCustomerHistory", () => {
   });
   test("should work with multiple transaction history", async () => {
     const fakeId = uuid();
-    const quantity = 5;
+    const quantity = 1;
     await createTransaction(fakeId, quantity);
     await createTransaction(fakeId, quantity);
     await createTransaction(fakeId, quantity);

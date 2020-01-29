@@ -59,7 +59,7 @@ const createTransaction = async (customerId, quantity) => {
     throw new Error(`${quantity} is not a positive integer`);
   }
   const transactionRecords = await getCustomerHistory(customerId);
-  const quotaSpent = computeQuotaSpent(transactionRecords);
+  const quotaSpent = await computeQuotaSpent(transactionRecords);
   if (quotaSpent + quantity > QUOTA_PER_PERIOD) {
     throw new Error(
       `Error: quantity requested will exceed customer quota of ${QUOTA_PER_PERIOD}`
@@ -73,5 +73,7 @@ const createTransaction = async (customerId, quantity) => {
 
 module.exports = {
   getCustomerHistory,
-  createTransaction
+  createTransaction,
+  computeQuotaSpent,
+  QUOTA_PER_PERIOD
 };

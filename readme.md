@@ -1,50 +1,48 @@
-# OpenAttestation Function
+# Musket API
 
-## Verify
+# API
 
-This function will perform a 3 step check for documents issued under OpenAttestaion or OpenCerts format. The function checkes for
-
-- document is issued on document store
-- document is not revoked on document store
-- document has not been tampered with
-
-This function does not check the identity of the issuer as current implementations make use of centralised registries. A decentralised identity check is currently underway to check for the identity of the issuer.
+### GET: /quota/:id
 
 Example:
-
 ```
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"document":"<OA_DOCUMENT_HERE>"}' \
-  https://api.opencerts.io/verify
-```
+POST: /transactions/S0000001I
 
-## Email
-
-This function sends email on behalf of OpenCerts user to another recipient. This function is for OpenCerts documents only.
-
-Example (with captcha):
-
-```
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"to": "someone@example.com", "captcha": "<CAPTCHA_SECRET>", "certificate":"<OA_DOCUMENT_HERE>"}' \
-  https://api.opencerts.io/email
+body: {
+  "quantity": 5
+}
 ```
 
-Example (with API KEY):
-
+Returns:
 ```
-curl --header "Content-Type: application/json" \
-  --request POST \
-  --data '{"to": "someone@example.com", "X-API-KEY": "<API_KEY>", "certificate":"<OA_DOCUMENT_HERE>"}' \
-  https://api.opencerts.io/email
+[
+    {
+        "quantity": 5,
+        "transactionTime": 1580330642589
+    }
+]
 ```
 
-## Storage (TBD)
 
-This function is currently being developed to transfer a OpenAttestation document via QR. There are two parts of the function to upload and then download the document. 
+### POST: /transactions/:id
 
+Example:
+```
+GET: /transactions/S0000001I
+```
+
+Returns:
+```
+{
+    "remainingQuota": 0,
+    "history": [
+        {
+            "quantity": 5,
+            "transactionTime": 1580330434981
+        }
+    ]
+}
+```
 # Development
 
 Copy `.env` from a co-worker or insert own credentials to get started. A copy of the .env file is available at `.env.example`
