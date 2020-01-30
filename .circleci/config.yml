@@ -26,9 +26,9 @@ jobs:
       # - run:
       #     name: integration
       #     command: npm run integration:local
-      - run:
-          name: depcheck
-          command: npm run depcheck
+      # - run:
+      #     name: depcheck
+      #     command: npm run depcheck
       - run:
           name: slsConfigCheck
           command: npm run sls-config-check
