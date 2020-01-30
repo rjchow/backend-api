@@ -1,10 +1,9 @@
-const middy = require("middy");
-const { cors } = require("middy/middlewares");
 const {
   getCustomerHistory,
   computeQuotaSpent,
   computeRemainingQuota
 } = require("./documentService");
+const { authenticatedRequestHandler } = require("../common/requestHandler");
 
 const handleGet = async event => {
   try {
@@ -24,7 +23,7 @@ const handleGet = async event => {
   }
 };
 
-const handler = middy(handleGet).use(cors());
+const handler = authenticatedRequestHandler(handleGet);
 
 module.exports = {
   handler

@@ -1,12 +1,13 @@
-const middy = require("middy");
-const { cors } = require("middy/middlewares");
 const { createTransaction } = require("./documentService");
+
+const { authenticatedRequestHandler } = require("../common/requestHandler");
 
 const handleCreate = async event => {
   try {
     const { id } = event.pathParameters;
     const { quantity } = JSON.parse(event.body);
-    const receipt = await createTransaction(id, quantity);
+    const user = event.auth;
+    const receipt = await createTransaction(id, quantity, user.userReference);
     return {
       statusCode: 200,
       body: JSON.stringify(receipt)
@@ -28,7 +29,7 @@ const handleCreate = async event => {
   }
 };
 
-const handler = middy(handleCreate).use(cors());
+const handler = authenticatedRequestHandler(handleCreate);
 
 module.exports = {
   handler
