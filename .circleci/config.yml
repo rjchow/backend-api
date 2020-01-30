@@ -16,7 +16,7 @@ jobs:
           command: npm run test
       - run:
           name: dbSetup
-          command: dynamodb-local-setup
+          command: npm run dynamodb-local-setup
       - run:
           name: runApp
           command: npm run dev &
