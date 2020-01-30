@@ -6,6 +6,26 @@
 
 Example:
 ```
+GET: /transactions/S0000001I
+```
+
+Returns:
+```
+{
+    "remainingQuota": 0,
+    "history": [
+        {
+            "quantity": 5,
+            "transactionTime": 1580330434981
+        }
+    ]
+}
+```
+
+### POST: /transactions/:id
+
+Example:
+```
 POST: /transactions/S0000001I
 
 body: {
@@ -24,25 +44,6 @@ Returns:
 ```
 
 
-### POST: /transactions/:id
-
-Example:
-```
-GET: /transactions/S0000001I
-```
-
-Returns:
-```
-{
-    "remainingQuota": 0,
-    "history": [
-        {
-            "quantity": 5,
-            "transactionTime": 1580330434981
-        }
-    ]
-}
-```
 # Configuration
 
 See .example.env for configurable parameters
