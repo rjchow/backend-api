@@ -1,20 +1,17 @@
 const { createHash } = require("crypto");
-const config = require("../config");
+const { config } = require("../../../config");
 const { put, query } = require("../dynamoDb");
-
-const SALT = "salt";
-const QUOTA_PER_PERIOD = 5;
 
 const identifierStringToSaltedHash = identifier =>
   createHash("sha256")
-    .update(`${identifier} + ${SALT}`)
+    .update(`${identifier} + ${config.appParameters.salt}`)
     .digest("hex");
 
 const putTransaction = async (customerId, quantity) => {
   const transactionTime = Date.now(); // unix time in microseconds
   const transactedBy = "system"; // TODO: change this to user id
   const params = {
-    TableName: config.dynamodb.storageTableName,
+    TableName: config.dynamodb().storageTableName,
     Item: {
       customerId: identifierStringToSaltedHash(customerId),
       quantity,
@@ -25,13 +22,21 @@ const putTransaction = async (customerId, quantity) => {
   return put(params).then(() => params.Item);
 };
 
-const getCustomerHistory = async customerId => {
+const computeTimestampSinceOffset = recordLifetimeInMicroseconds =>
+  Date.now() - recordLifetimeInMicroseconds;
+
+const getCustomerHistory = async (
+  customerId,
+  recordLifetime = config.appParameters.recordLifetime()
+) => {
+  const recordsSince = computeTimestampSinceOffset(recordLifetime);
   const params = {
-    TableName: config.dynamodb.storageTableName,
-    KeyConditionExpression: "customerId = :givenId",
+    TableName: config.dynamodb().storageTableName,
+    KeyConditionExpression:
+      "customerId = :givenId and transactionTime > :recordsSince",
     ExpressionAttributeValues: {
-      ":givenId": identifierStringToSaltedHash(customerId)
-      // TODO: set range expression for history to look back
+      ":givenId": identifierStringToSaltedHash(customerId),
+      ":recordsSince": recordsSince
     }
   };
   const documents = await query(params);
@@ -47,6 +52,9 @@ const computeQuotaSpent = async transactionRecords =>
     0
   );
 
+const computeRemainingQuota = quotaSpent =>
+  config.appParameters.quotaPerPeriod - quotaSpent;
+
 const validateQuantity = quantity => Number.isInteger(quantity) && quantity > 0;
 
 const validateIdentifier = identifier => identifier.length > 0; // TODO: add validation rules
@@ -60,9 +68,9 @@ const createTransaction = async (customerId, quantity) => {
   }
   const transactionRecords = await getCustomerHistory(customerId);
   const quotaSpent = await computeQuotaSpent(transactionRecords);
-  if (quotaSpent + quantity > QUOTA_PER_PERIOD) {
+  if (computeRemainingQuota(quotaSpent) < quantity) {
     throw new Error(
-      `Error: quantity requested will exceed customer quota of ${QUOTA_PER_PERIOD}`
+      `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod}`
     );
   }
   const receipt = await putTransaction(customerId, quantity);
@@ -75,5 +83,5 @@ module.exports = {
   getCustomerHistory,
   createTransaction,
   computeQuotaSpent,
-  QUOTA_PER_PERIOD
+  computeRemainingQuota
 };

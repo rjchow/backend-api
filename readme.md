@@ -43,6 +43,10 @@ Returns:
     ]
 }
 ```
+# Configuration
+
+See .example.env for configurable parameters
+
 # Development
 
 Copy `.env` from a co-worker or insert own credentials to get started. A copy of the .env file is available at `.env.example`

@@ -1,9 +1,9 @@
 const uuid = require("uuid/v4");
 const {
   createTransaction,
-  getCustomerHistory,
-  QUOTA_PER_PERIOD
+  getCustomerHistory
 } = require("../../src/storage/documentService");
+const { config, setConfig } = require("../../config");
 
 describe("createTransaction", () => {
   test("should store a transaction correctly", async () => {
@@ -22,7 +22,7 @@ describe("createTransaction", () => {
       await createTransaction(fakeId, quantity);
     } catch (e) {
       expect(e.message).toEqual(
-        `Error: quantity requested will exceed customer quota of ${QUOTA_PER_PERIOD}`
+        `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod}`
       );
     }
   });
@@ -31,14 +31,16 @@ describe("createTransaction", () => {
     const fakeId = uuid();
     await createTransaction(fakeId, 1);
     try {
-      await createTransaction(fakeId, QUOTA_PER_PERIOD);
+      await createTransaction(fakeId, config.appParameters.quotaPerPeriod);
     } catch (e) {
       expect(e.message).toEqual(
-        `Error: quantity requested will exceed customer quota of ${QUOTA_PER_PERIOD}`
+        `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod}`
       );
     }
   });
 });
+
+const delay = t => new Promise(resolve => setTimeout(resolve, t));
 
 describe("getCustomerHistory", () => {
   test("should return empty array if customer has never been seen before", async () => {
@@ -66,5 +68,17 @@ describe("getCustomerHistory", () => {
       { quantity, transactionTime: expect.any(Number) },
       { quantity, transactionTime: expect.any(Number) }
     ]);
+  });
+  test("should only return records that haven't expired", async () => {
+    const fakeId = uuid();
+    setConfig.setRecordLifetime(100);
+    await createTransaction(fakeId, 1);
+    await delay(100);
+    await createTransaction(fakeId, 1);
+    const records = await getCustomerHistory(fakeId);
+    expect(records).toMatchObject([
+      { quantity: 1, transactionTime: expect.any(Number) }
+    ]);
+    expect(records[0].transactionTime).toBeGreaterThan(Date.now() - 100);
   });
 });

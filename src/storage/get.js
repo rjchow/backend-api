@@ -3,7 +3,7 @@ const { cors } = require("middy/middlewares");
 const {
   getCustomerHistory,
   computeQuotaSpent,
-  QUOTA_PER_PERIOD
+  computeRemainingQuota
 } = require("./documentService");
 
 const handleGet = async event => {
@@ -11,7 +11,7 @@ const handleGet = async event => {
     const { id } = event.pathParameters;
     const history = await getCustomerHistory(id);
     const quotaSpent = await computeQuotaSpent(history);
-    const remainingQuota = QUOTA_PER_PERIOD - quotaSpent;
+    const remainingQuota = computeRemainingQuota(quotaSpent);
     return {
       statusCode: 200,
       body: JSON.stringify({ remainingQuota, history })
