@@ -17,15 +17,15 @@ jobs:
       - run:
           name: dbSetup
           command: npm run dynamodb-local-setup
-      - run:
-          name: runApp
-          command: npm run dev &
-      - run:
-          name: sleep
-          command: sleep 5
-      - run:
-          name: integration
-          command: npm run integration:local
+      # - run:
+      #     name: runApp
+      #     command: npm run dev &
+      # - run:
+      #     name: sleep
+      #     command: sleep 5
+      # - run:
+      #     name: integration
+      #     command: npm run integration:local
       - run:
           name: depcheck
           command: npm run depcheck
