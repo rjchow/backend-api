@@ -67,6 +67,7 @@ workflows:
               only: master
       - deploy_master:
           requires:
+            - deploy_staging
             - build
           filters:
             branches:

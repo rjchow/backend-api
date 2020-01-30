@@ -6,7 +6,7 @@ provider:
   stage: ${opt:stage, 'stg'}
   region: ap-southeast-1
   environment:
-    MUSKET_STORAGE_TABLE: musket-storage-${opt:stage, self:provider.stage}
+    MUSKET_STORAGE_TABLE: musket-table-${opt:stage, self:provider.stage}
 
   iamRoleStatements:
     - Effect: Allow
