@@ -1,0 +1,73 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: "circleci/node:latest"
+    steps:
+      - checkout
+      - run:
+          name: install
+          command: npm install
+      - run:
+          name: lint
+          command: npm run lint
+      - run:
+          name: test
+          command: npm run test
+      - run:
+          name: dbSetup
+          command: dynamodb-local-setup
+      - run:
+          name: runApp
+          command: npm run dev &
+      - run:
+          name: sleep
+          command: sleep 5
+      - run:
+          name: integration
+          command: npm run integration:local
+      - run:
+          name: depcheck
+          command: npm run depcheck
+      - run:
+          name: slsConfigCheck
+          command: npm run sls-config-check
+  deploy_staging:
+    docker:
+      - image: "circleci/node:latest"
+    steps:
+      - checkout
+      - run:
+          name: install
+          command: npm install
+      - run:
+          name: deployStaging
+          command: ./scripts/deploy_staging.sh
+  deploy_master:
+    docker:
+      - image: "openattestation/expo-build:latest"
+    steps:
+      - checkout
+      - run:
+          name: install
+          command: npm install
+      - run:
+          name: deployProd
+          command: ./scripts/deploy_production.sh
+workflows:
+  version: 2
+  test_and_publish:
+    jobs:
+      - build
+      - deploy_staging:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
+      - deploy_master:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
