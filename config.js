@@ -12,10 +12,12 @@ const setRecordLifetime = durationInMicroseconds => {
 const getDynamodbConfig = () =>
   process.env.IS_OFFLINE
     ? {
-        storageTableName: "musket-storage-stg"
+        storageTableName: "musket-storage-stg",
+        authTableName: "musket-auth-stg"
       }
     : {
-        storageTableName: process.env.MUSKET_STORAGE_TABLE
+        storageTableName: process.env.MUSKET_STORAGE_TABLE,
+        authTableName: process.env.MUSKET_AUTH_TABLE
       };
 
 const config = () => ({

@@ -1,4 +1,4 @@
-service: musket-api
+service: musket-api-test
 
 provider:
   name: aws
@@ -6,7 +6,8 @@ provider:
   stage: ${opt:stage, 'stg'}
   region: ap-southeast-1
   environment:
-    MUSKET_STORAGE_TABLE: musket-table-${opt:stage, self:provider.stage}
+    MUSKET_STORAGE_TABLE: musket-storage-${opt:stage, self:provider.stage}
+    MUSKET_AUTH_TABLE: musket-auth-${opt:stage, self:provider.stage}
 
   iamRoleStatements:
     - Effect: Allow
@@ -16,9 +17,32 @@ provider:
         - dynamodb:GetItem
         - dynamodb:PutItem
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.MUSKET_STORAGE_TABLE}"
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.MUSKET_AUTH_TABLE}"
 
 resources:
   Resources:
+    AuthDynamoDbTable:
+      Type: 'AWS::DynamoDB::Table'
+      DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: operatorToken
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: operatorToken
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:provider.environment.MUSKET_AUTH_TABLE}
     DocsDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Retain
@@ -42,6 +66,21 @@ resources:
         TableName: ${self:provider.environment.MUSKET_STORAGE_TABLE}
 
 functions:
+  auth:
+    handler: src/auth/get.handler
+    events:
+      - http:
+          path: /auth
+          method: get
+          cors: true
+  postAuthorisationToken:
+    handler: src/auth/post.handler
+    events:
+      - http:
+          path: /auth
+          method: post
+          cors: true
+          authorizer: aws_iam
   getQuota: 
     handler: src/storage/get.handler
     events:

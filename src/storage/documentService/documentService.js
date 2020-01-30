@@ -1,22 +1,21 @@
 const { createHash } = require("crypto");
 const { config } = require("../../../config");
-const { put, query } = require("../dynamoDb");
+const { put, query } = require("../../dynamoDb");
 
 const identifierStringToSaltedHash = identifier =>
   createHash("sha256")
     .update(`${identifier} + ${config.appParameters.salt}`)
     .digest("hex");
 
-const putTransaction = async (customerId, quantity) => {
+const putTransaction = async (customerId, quantity, user) => {
   const transactionTime = Date.now(); // unix time in microseconds
-  const transactedBy = "system"; // TODO: change this to user id
   const params = {
     TableName: config.dynamodb().storageTableName,
     Item: {
       customerId: identifierStringToSaltedHash(customerId),
       quantity,
       transactionTime,
-      transactedBy
+      transactedBy: user
     }
   };
   return put(params).then(() => params.Item);
@@ -59,7 +58,7 @@ const validateQuantity = quantity => Number.isInteger(quantity) && quantity > 0;
 
 const validateIdentifier = identifier => identifier.length > 0; // TODO: add validation rules
 
-const createTransaction = async (customerId, quantity) => {
+const createTransaction = async (customerId, quantity, user) => {
   if (!validateIdentifier(customerId)) {
     throw new Error("Invalid customer ID");
   }
@@ -73,7 +72,7 @@ const createTransaction = async (customerId, quantity) => {
       `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod}`
     );
   }
-  const receipt = await putTransaction(customerId, quantity);
+  const receipt = await putTransaction(customerId, quantity, user);
   return transactionRecords.concat([
     { quantity: receipt.quantity, transactionTime: receipt.transactionTime }
   ]);

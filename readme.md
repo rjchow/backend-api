@@ -43,6 +43,18 @@ Returns:
 ]
 ```
 
+### GET: /auth
+
+This endpoint requires only an 'Authorization' key-value pair in your HTTP header, if you are an authorised operator this will return 200 "OK".
+
+### POST: /auth
+
+This endpoint is protected by AWS_IAM, if you are using Postman please use AWS Signature for authorization method.
+If you are using this from the commandline using `sls invoke`, you can invoke it like this if you have the right IAM permissions:
+
+```
+sls invoke -f postAuthorisationToken -d '{ "body": "{\"authToken\": \"93b7d487-8935-493b-8bde-d8954e48b3be\",\"role\": \"OPERATOR\",\"userReference\": \"S0000003E\"}" }'
+```
 
 # Configuration
 
