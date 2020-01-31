@@ -8,7 +8,7 @@ const { config, setConfig } = require("../../config");
 describe("createTransaction", () => {
   test("should store a transaction correctly", async () => {
     const fakeId = uuid();
-    const quantity = 5;
+    const quantity = 1;
     const receipt = await createTransaction(fakeId, quantity);
     expect(receipt).toMatchObject([
       { quantity, transactionTime: expect.any(Number) }
@@ -22,7 +22,7 @@ describe("createTransaction", () => {
       await createTransaction(fakeId, quantity);
     } catch (e) {
       expect(e.message).toEqual(
-        `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod}`
+        `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod()}`
       );
     }
   });
@@ -31,10 +31,10 @@ describe("createTransaction", () => {
     const fakeId = uuid();
     await createTransaction(fakeId, 1);
     try {
-      await createTransaction(fakeId, config.appParameters.quotaPerPeriod);
+      await createTransaction(fakeId, config.appParameters.quotaPerPeriod());
     } catch (e) {
       expect(e.message).toEqual(
-        `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod}`
+        `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod()}`
       );
     }
   });
@@ -49,7 +49,7 @@ describe("getCustomerHistory", () => {
 
   test("should work with one transaction history", async () => {
     const fakeId = uuid();
-    const quantity = 5;
+    const quantity = 1;
     await createTransaction(fakeId, quantity);
     const record = await getCustomerHistory(fakeId);
     expect(record).toMatchObject([
@@ -57,6 +57,9 @@ describe("getCustomerHistory", () => {
     ]);
   });
   test("should work with multiple transaction history", async () => {
+    const prevQuota = config.appParameters.quotaPerPeriod();
+    setConfig.setQuotaPerPeriod(5);
+
     const fakeId = uuid();
     const quantity = 1;
     await createTransaction(fakeId, quantity);
@@ -68,6 +71,7 @@ describe("getCustomerHistory", () => {
       { quantity, transactionTime: expect.any(Number) },
       { quantity, transactionTime: expect.any(Number) }
     ]);
+    setConfig.setQuotaPerPeriod(prevQuota);
   });
   test("should only return records that haven't expired", async () => {
     const fakeId = uuid();

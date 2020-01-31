@@ -52,7 +52,7 @@ const computeQuotaSpent = async transactionRecords =>
   );
 
 const computeRemainingQuota = quotaSpent =>
-  config.appParameters.quotaPerPeriod - quotaSpent;
+  config.appParameters.quotaPerPeriod() - quotaSpent;
 
 const validateQuantity = quantity => Number.isInteger(quantity) && quantity > 0;
 
@@ -69,7 +69,7 @@ const createTransaction = async (customerId, quantity, user) => {
   const quotaSpent = await computeQuotaSpent(transactionRecords);
   if (computeRemainingQuota(quotaSpent) < quantity) {
     throw new Error(
-      `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod}`
+      `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod()}`
     );
   }
   const receipt = await putTransaction(customerId, quantity, user);

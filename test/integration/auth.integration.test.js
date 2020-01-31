@@ -79,8 +79,6 @@ describe("authMiddleware", () => {
       role: userObject.role,
       userReference: userObject.userReference
     });
-
-    expect(mockCallback.mock.calls.length).toEqual(1);
   });
   test("should return error response when user doesn't exist", async () => {
     expect.assertions(1);

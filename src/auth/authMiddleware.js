@@ -2,7 +2,7 @@ const createError = require("http-errors");
 const { getAuthorisation } = require("./authService");
 
 const onlyAuthorisedOperator = () => ({
-  before: async (handler, next) => {
+  before: async handler => {
     const { Authorization: authToken } = handler.event.headers;
 
     const userObject = authToken // TODO: validate that this is a uuid
@@ -14,10 +14,9 @@ const onlyAuthorisedOperator = () => ({
       // eslint disable because we actually need to modify the context
       // eslint-disable-next-line no-param-reassign
       handler.event.auth = userObject;
-      next();
-    } else {
-      throw new createError.Unauthorized();
+      return;
     }
+    throw new createError.Unauthorized();
   }
 });
 
