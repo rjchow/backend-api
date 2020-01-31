@@ -1,4 +1,4 @@
-service: musket-api-test
+service: musket-api
 
 provider:
   name: aws
