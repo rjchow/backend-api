@@ -1,6 +1,6 @@
 const DEFAULT_RECORD_LIFETIME_IN_MICROSECONDS = 7 * 24 * 60 * 60 * 1000;
 const DEFAULT_SALT = "salt";
-const DEFAULT_QUOTA_PER_PERIOD = 5;
+const DEFAULT_QUOTA_PER_PERIOD = 1;
 
 let configRecordLifetimeInMicroseconds = DEFAULT_RECORD_LIFETIME_IN_MICROSECONDS;
 const getRecordLifetime = () => configRecordLifetimeInMicroseconds;
