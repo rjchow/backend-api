@@ -39,9 +39,7 @@ resources:
           -
             AttributeName: operatorToken
             KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.MUSKET_AUTH_TABLE}
     DocsDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
@@ -60,9 +58,7 @@ resources:
             KeyType: HASH
           - AttributeName: transactionTime
             KeyType: RANGE
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+        BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.MUSKET_STORAGE_TABLE}
 
 functions:
