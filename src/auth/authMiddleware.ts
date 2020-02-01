@@ -1,7 +1,7 @@
-const createError = require("http-errors");
-const { getAuthorisation } = require("./authService");
+import createError from "http-errors";
+import { getAuthorisation } from "./authService";
 
-const onlyAuthorisedOperator = () => ({
+export const onlyAuthorisedOperator: middy.Middleware<any, any, any> = () => ({
   before: async handler => {
     const { Authorization: authToken } = handler.event.headers;
 
@@ -19,5 +19,3 @@ const onlyAuthorisedOperator = () => ({
     throw new createError.Unauthorized();
   }
 });
-
-module.exports = { onlyAuthorisedOperator };

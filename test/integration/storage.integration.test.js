@@ -1,9 +1,9 @@
-const uuid = require("uuid/v4");
-const {
+import uuid from "uuid/v4";
+import {
   createTransaction,
   getCustomerHistory
-} = require("../../src/storage/documentService");
-const { config, setConfig } = require("../../config");
+} from "../../src/storage/documentService";
+import { config, setConfig } from "../../config";
 
 describe("createTransaction", () => {
   test("should store a transaction correctly", async () => {
@@ -18,25 +18,19 @@ describe("createTransaction", () => {
     expect.assertions(1);
     const fakeId = uuid();
     const quantity = 9999999;
-    try {
-      await createTransaction(fakeId, quantity);
-    } catch (e) {
-      expect(e.message).toEqual(
-        `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod()}`
-      );
-    }
+    await expect(createTransaction(fakeId, quantity)).rejects.toThrow(
+      `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod()}`
+    );
   });
   test("should fail if quantity requested causes quota to exceed", async () => {
     expect.assertions(1);
     const fakeId = uuid();
     await createTransaction(fakeId, 1);
-    try {
-      await createTransaction(fakeId, config.appParameters.quotaPerPeriod());
-    } catch (e) {
-      expect(e.message).toEqual(
-        `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod()}`
-      );
-    }
+    await expect(
+      createTransaction(fakeId, config.appParameters.quotaPerPeriod())
+    ).rejects.toThrow(
+      `Quantity requested will exceed customer quota of ${config.appParameters.quotaPerPeriod()}`
+    );
   });
 });
 

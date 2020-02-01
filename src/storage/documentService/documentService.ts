@@ -1,14 +1,28 @@
-const { createHash } = require("crypto");
-const { config } = require("../../../config");
-const { put, query } = require("../../dynamoDb");
+import { createHash } from "crypto";
+import { config } from "../../../config";
+import { put, query } from "../../dynamoDb";
 
-const identifierStringToSaltedHash = identifier =>
+type CustomerId = string;
+type TransactionTimeInMicroseconds = number;
+type RecordLifetimeInMicroseconds = number;
+
+interface TransactionRecord {
+  customerId: CustomerId;
+  quantity: number;
+  transactionTime: TransactionTimeInMicroseconds;
+  transactedBy: string;
+}
+const identifierStringToSaltedHash = (identifier: string) =>
   createHash("sha256")
     .update(`${identifier} + ${config.appParameters.salt}`)
     .digest("hex");
 
-const putTransaction = async (customerId, quantity, user) => {
-  const transactionTime = Date.now(); // unix time in microseconds
+const putTransaction = async (
+  customerId: CustomerId,
+  quantity: number,
+  user: string
+): Promise<TransactionRecord> => {
+  const transactionTime: TransactionTimeInMicroseconds = Date.now(); // unix time in microseconds
   const params = {
     TableName: config.dynamodb().storageTableName,
     Item: {
@@ -21,11 +35,12 @@ const putTransaction = async (customerId, quantity, user) => {
   return put(params).then(() => params.Item);
 };
 
-const computeTimestampSinceOffset = recordLifetimeInMicroseconds =>
-  Date.now() - recordLifetimeInMicroseconds;
+const computeTimestampSinceOffset = (
+  recordLifetimeInMicroseconds: RecordLifetimeInMicroseconds
+) => Date.now() - recordLifetimeInMicroseconds;
 
-const getCustomerHistory = async (
-  customerId,
+export const getCustomerHistory = async (
+  customerId: CustomerId,
   recordLifetime = config.appParameters.recordLifetime()
 ) => {
   const recordsSince = computeTimestampSinceOffset(recordLifetime);
@@ -39,26 +54,34 @@ const getCustomerHistory = async (
     }
   };
   const documents = await query(params);
-  return documents.Items.map(transactionRecord => ({
+  return documents.Items.map((transactionRecord: TransactionRecord) => ({
     quantity: transactionRecord.quantity,
     transactionTime: transactionRecord.transactionTime
   }));
 };
 
-const computeQuotaSpent = async transactionRecords =>
+export const computeQuotaSpent = async (
+  transactionRecords: TransactionRecord[]
+) =>
   transactionRecords.reduce(
     (accumulator, record) => accumulator + record.quantity,
     0
   );
 
-const computeRemainingQuota = quotaSpent =>
+export const computeRemainingQuota = (quotaSpent: number) =>
   config.appParameters.quotaPerPeriod() - quotaSpent;
 
-const validateQuantity = quantity => Number.isInteger(quantity) && quantity > 0;
+const validateQuantity = (quantity: number): boolean =>
+  Number.isInteger(quantity) && quantity > 0;
 
-const validateIdentifier = identifier => identifier.length > 0; // TODO: add validation rules
+const validateIdentifier = (identifier: string): boolean =>
+  identifier.length > 0; // TODO: add validation rules
 
-const createTransaction = async (customerId, quantity, user) => {
+export const createTransaction = async (
+  customerId: CustomerId,
+  quantity: number,
+  user: string
+) => {
   if (!validateIdentifier(customerId)) {
     throw new Error("Invalid customer ID");
   }
@@ -76,11 +99,4 @@ const createTransaction = async (customerId, quantity, user) => {
   return transactionRecords.concat([
     { quantity: receipt.quantity, transactionTime: receipt.transactionTime }
   ]);
-};
-
-module.exports = {
-  getCustomerHistory,
-  createTransaction,
-  computeQuotaSpent,
-  computeRemainingQuota
 };

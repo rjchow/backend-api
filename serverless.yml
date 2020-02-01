@@ -118,6 +118,7 @@ custom:
 
 
 plugins:
+  - serverless-plugin-typescript
   - serverless-dotenv-plugin
   - serverless-dynamodb-local
   - serverless-offline

@@ -1,10 +1,7 @@
-const uuid = require("uuid/v4");
-const {
-  getAuthorisation,
-  putAuthorisation
-} = require("../../src/auth/authService");
+import uuid from "uuid/v4";
+import { getAuthorisation, putAuthorisation } from "../../src/auth/authService";
 
-const { onlyAuthorisedOperator } = require("../../src/auth/authMiddleware");
+import { onlyAuthorisedOperator } from "../../src/auth/authMiddleware";
 
 describe("putAuthorisation", () => {
   test("should put a user object", async () => {
@@ -39,17 +36,13 @@ describe("authMiddleware", () => {
         }
       }
     };
-    try {
-      await onlyAuthorisedOperator().before(mockHandler);
-    } catch (e) {
-      expect(e.message).toEqual("Unauthorized");
-    }
+    await expect(onlyAuthorisedOperator().before(mockHandler)).rejects.toThrow(
+      /Unauthorized/
+    );
     mockHandler.event.headers = {};
-    try {
-      await onlyAuthorisedOperator().before(mockHandler);
-    } catch (e) {
-      expect(e.message).toEqual("Unauthorized");
-    }
+    await expect(onlyAuthorisedOperator().before(mockHandler)).rejects.toThrow(
+      /Unauthorized/
+    );
   });
   test("should inject context when user exists", async () => {
     const fakeToken = uuid();
@@ -92,10 +85,8 @@ describe("authMiddleware", () => {
       },
       callback: mockCallback
     };
-    try {
-      await onlyAuthorisedOperator().before(mockHandler, mockCallback);
-    } catch (e) {
-      expect(e.message).toEqual("Unauthorized");
-    }
+    await expect(
+      onlyAuthorisedOperator().before(mockHandler, mockCallback)
+    ).rejects.toThrow(/Unauthorized/);
   });
 });
