@@ -7,6 +7,7 @@ import { getAuthorisation, putAuthorisation } from "./authService";
 
 const handlePost = async (event: APIGatewayEvent) => {
   const { authToken, role, userReference } = JSON.parse(event.body ?? "");
+  // TODO input validation here
   if (await getAuthorisation(authToken)) {
     throw createError(400, "Authorization Token already exists");
   }

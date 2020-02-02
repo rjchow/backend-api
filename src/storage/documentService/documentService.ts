@@ -40,7 +40,7 @@ const computeTimestampSinceOffset = (
 ) => Date.now() - recordLifetimeInMicroseconds;
 
 export const getCustomerHistory = async (
-  customerId: CustomerId,
+  customerId: CustomerId, // TODO: validate customerId
   recordLifetime = config.appParameters.recordLifetime()
 ) => {
   const recordsSince = computeTimestampSinceOffset(recordLifetime);
