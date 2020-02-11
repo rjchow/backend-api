@@ -1,2 +1,2 @@
 after_deploy:
-  - serverless info
+  - serverless info --stage $SEED_STAGE_NAME
