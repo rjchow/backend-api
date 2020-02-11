@@ -1,2 +1,2 @@
 after_deploy:
-  - serverless info --stage $SEED_STAGE_NAME
+  - export API_HOST=`awk '/endpoints/{getline; split($3,a,"/"); print a[3]}' < serverless info --stage $SEED_STAGE_NAME`
